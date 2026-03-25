@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pacer</title>
+    <style>
+        :root { --bg: #0a0a0a; --gold: #FFD700; --blue: #007AFF; --green: #00FF88; --red: #FF3B30; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        #last-start { font-size: 0.75rem; color: #555; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        #timer { font-size: 5.5rem; font-weight: 800; margin: 10px 0 25px 0; font-variant-numeric: tabular-nums; }
+        .btn-stack { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
+        .btn { width: 100%; padding: 22px; border: none; border-radius: 18px; font-size: 1.2rem; font-weight: bold; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        #beer-btn { background: var(--gold); color: #000; }
+        #beer-btn:disabled { background: #222; color: #555; }
+        #water-btn { background: var(--blue); color: white; }
+        #water-btn:disabled { background: #1a1a1a; color: #444; opacity: 0.5; }
+        .log-container { width: 100%; max-width: 340px; background: #1a1a1a; border-radius: 18px; padding: 15px; margin-top: 25px; }
+        .log-header { font-size: 0.8rem; color: #666; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; font-size: 0.95rem; }
+        #settings-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        input { background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 70px; text-align: center; font-size: 1.3rem; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span onclick="toggleSettings()" style="font-size: 1.4rem; cursor:pointer; padding: 10px;">⚙️</span>
+        <span id="status" style="color:#888; font-weight:bold; letter-spacing: 2px;">PACER</span>
+        <span onclick="finishNight()" style="color:var(--red); font-weight:bold; cursor:pointer; padding: 10px;">FINISH</span>
+    </div>
+
+    <div id="last-start">--:--</div>
+    <div id="timer">READY</div>
+
+    <div class="btn-stack">
+        <button id="beer-btn" class="btn" onclick="buyBeer()">BUY BEER</button>
+        <button id="water-btn" class="btn" onclick="drinkWater()">DRINK WATER</button>
+    </div>
+
+    <div class="log-container">
+        <div class="log-header"><span>Session Log</span><span id="beer-count">0 Beers</span></div>
+        <ul id="history-list"></ul>
+    </div>
+
+    <div id="settings-panel">
+        <h2 style="margin-bottom: 30px;">Settings</h2>
+        <div style="text-align: center;">
+            <p style="color:#888; margin: 5px 0;">Wait Time (mins)</p>
+            <input type="number" id="set-wait" value="70">
+            <p style="color:#888; margin: 20px 0 5px 0;">Water Bonus (mins)</p>
+            <input type="number" id="set-bonus" value="10">
+        </div>
+        <div onclick="toggleSettings()" style="margin-top:40px; color:var(--blue); font-weight:bold; cursor:pointer; font-size: 1.3rem; border: 2px solid var(--blue); padding: 15px 40px; border-radius: 12px;">SAVE</div>
+    </div>
+
+    <script>
+        let waitTime = parseInt(localStorage.getItem('waitTime')) || 70;
+        let bonusTime = parseInt(localStorage.getItem('bonusTime')) || 10;
+        let nextBeerTime = parseInt(localStorage.getItem('nextBeerTime')) || 0;
+        let waterUsed = localStorage.getItem('waterUsed') === 'true';
+        let history = JSON.parse(localStorage.getItem('beerHistory')) || [];
+        let lastFivePaces = JSON.parse(localStorage.getItem('lastFivePaces')) || [];
+
+        function updateUI() {
+            const now = Date.now();
+            const diff = nextBeerTime - now;
+            const timerEl = document.getElementById('timer');
+            const startEl = document.getElementById('last-start');
+            
+            if (history.length > 0) {
+                startEl.innerText = `Last Purchase: ${history[0].time}`;
+            } else {
+                startEl.innerText = "No session active";
+            }
+
+            if (diff <= 0) {
+                timerEl.innerText = "READY";
+                timerEl.style.color = "var(--green)";
+                document.getElementById('beer-btn').disabled = false;
+                document.getElementById('water-btn').disabled = true;
+            } else {
+                const mins = Math.floor(diff / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                timerEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                timerEl.style.color = "var(--red)";
+                document.getElementById('beer-btn').disabled = true;
+                document.getElementById('water-btn').disabled = waterUsed;
+            }
+            document.getElementById('beer-count').innerText = `${history.length} Beer${history.length === 1 ? '' : 's'}`;
+            document.getElementById('history-list').innerHTML = history.slice(0, 5).map(e => `
+                <li><span>${e.time}</span> ${e.water ? '<span style="color:var(--blue)">💧 Water</span>' : ''}</li>
+            `).join('');
+        }
+
+        function buyBeer() {
+            const now = Date.now();
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            history.unshift({ timestamp: now, time: timeStr, water: false });
+            nextBeerTime = now + (waitTime * 60000);
+            waterUsed = false;
+            save(); updateUI();
+        }
+
+        function drinkWater() {
+            if (!waterUsed && nextBeerTime > Date.now()) {
+                nextBeerTime -= (bonusTime * 60000);
+                waterUsed = true;
+                if (history[0]) history[0].water = true;
+                save(); updateUI();
+            }
+        }
+
+        function finishNight() {
+            if (history.length < 2) {
+                alert("Session closed.");
+                resetSession();
+                return;
+            }
+            
+            const totalDurationMs = history[0].timestamp - history[history.length - 1].timestamp;
+            const currentAvg = Math.round((totalDurationMs / (history.length - 1)) / 60000);
+            const prevSessionAvg = lastFivePaces.length > 0 ? lastFivePaces[0] : null;
+            const fiveNightAvg = lastFivePaces.length > 0 ? Math.round(lastFivePaces.reduce((a, b) => a + b) / lastFivePaces.length) : null;
+            const getTrend = (comp) => (comp === null) ? "" : (currentAvg >= comp ? " ↑" : " ↓");
+
+            lastFivePaces.unshift(currentAvg);
+            if (lastFivePaces.length > 5) lastFivePaces.pop();
+            localStorage.setItem('lastFivePaces', JSON.stringify(lastFivePaces));
+
+            const waterCount = history.filter(e => e.water).length;
+            const waterPct = Math.round((waterCount / history.length) * 100);
+
+            let summary = `SESSION SUMMARY\n\n`;
+            summary += `Current Average Pace: ${currentAvg}m\n`;
+            summary += `Previous Session: ${prevSessionAvg ? prevSessionAvg + "m" + getTrend(prevSessionAvg) : "N/A"}\n`;
+            summary += `5-Night Baseline: ${fiveNightAvg ? fiveNightAvg + "m" + getTrend(fiveNightAvg) : "N/A"}\n\n`;
+            summary += `Hydration: ${waterCount}/${history.length} (${waterPct}%)\n`;
+            summary += `Total Beers: ${history.length}`;
+
+            alert(summary);
+            resetSession();
+        }
+
+        function resetSession() {
+            history = []; nextBeerTime = 0; waterUsed = false;
+            save(); updateUI();
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            if (panel.style.display === 'flex') {
+                waitTime = parseInt(document.getElementById('set-wait').value);
+                bonusTime = parseInt(document.getElementById('set-bonus').value);
+                localStorage.setItem('waitTime', waitTime);
+                localStorage.setItem('bonusTime', bonusTime);
+                panel.style.display = 'none';
+            } else { panel.style.display = 'flex'; }
+        }
+
+        function save() {
+            localStorage.setItem('nextBeerTime', nextBeerTime);
+            localStorage.setItem('waterUsed', waterUsed);
+            localStorage.setItem('beerHistory', JSON.stringify(history));
+        }
+
+        setInterval(updateUI, 1000);
+        updateUI();
+    </script>
+</body>
+</html>
