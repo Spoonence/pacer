@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pacer">
 
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBhMGEwYSIvPgogIDxwYXRoIGQ9Ik01MCw0MCBMNjAsMTQwIEw4MCwxNDAgTDkwLDQwIFoiIGZpbGw9IiNGRkQ3MDAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPgogIDxwYXRoIGQ9Ik00NSwzMCBMOTUsMzAgQzEwMCw0MCA5NSw1MCA4MCw1MCBDNzUsNTAgNzAsNTUgNzAsNjAgQzcwLDY1IDY1LDYwIDYwLDYwIEM1NSw2MCA1MCw2NSA1MCw3MCBDNTAsNzUgNDUsNzAgNDAsNzAgQzM1LDcwIDMwLDt5IDMwLDgwIEMzMCw4NSAyNSw4MCAyMCw4MCBDMTUsODAgMTAsODUgMTAsOTAgQzEwLDk1IDUsOTAgMCw5MCBMMCwzMCBaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBhMGEwYSIvPgogIDxwYXRoIGQ9Ik02MCw3MCBMNjAsMTQwIEwxMTAsMTQwIEwxMTAsNzAgWiBNMTEwLDkwIEwxMjUsOTAgQzEzNSw5MCAxMzUsMTIwIDEyNSwxMjAgTDExMCwxMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGRDcwMCIgc3Ryb2tlLXdpZHRoPSIxMCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik01NSw2MCBMMTE1LDYwIEMxMjAsNjAgMTIwLDcwIDExNSw3MCBMNTUsNzAgQzUwLDcwIDUwLDYwIDU1LDYwIFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPg==">
 
     <style>
         :root { --bg: #0a0a0a; --gold: #FFD700; --blue: #007AFF; --green: #00FF88; --red: #FF3B30; --card: #1a1a1a; }
@@ -30,7 +30,6 @@
         ul { list-style: none; padding: 0; margin: 0; }
         li { padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; font-size: 0.95rem; }
         
-        /* Chart Elements */
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
         .chart-wrapper { position: relative; width: 100%; max-width: 320px; height: 220px; margin-top: 30px; }
         .chart-container { display: flex; align-items: flex-end; justify-content: space-between; width: 100%; height: 200px; border-bottom: 2px solid #333; position: relative; z-index: 2; }
@@ -72,12 +71,10 @@
     <div id="history-panel" class="overlay">
         <h2 style="margin-bottom: 5px;">Pacing Trends</h2>
         <p style="color: #666; font-size: 0.8rem;">Target (Blue Line): <span id="target-stat">70</span>m</p>
-        
         <div class="chart-wrapper">
             <div id="chart-target-line" class="target-line"><span class="target-label">Goal</span></div>
             <div class="chart-container" id="chart-display"></div>
         </div>
-        
         <div onclick="toggleOverlay('history-panel')" style="margin-top:80px; color:var(--gold); font-weight:bold; cursor:pointer; font-size: 1.1rem; border: 1px solid var(--gold); padding: 12px 30px; border-radius: 12px;">CLOSE</div>
     </div>
 
@@ -90,17 +87,14 @@
             <input type="number" id="set-bonus" value="10">
         </div>
         <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; text-align:center; width: 100%; max-width: 300px;">
-            <p style="color:#666; font-size: 0.7rem; margin-bottom: 10px; letter-spacing: 1px;">DATA MANAGEMENT</p>
             <button class="secondary-btn" onclick="exportData()">EXPORT</button>
             <button class="secondary-btn" onclick="importData()">IMPORT</button>
-            <br>
             <div class="danger-link" onclick="clearCurrentLog()">Wipe Current Session Log</div>
         </div>
         <div onclick="saveSettings()" style="margin-top:40px; color:var(--blue); font-weight:bold; cursor:pointer; font-size: 1.3rem; border: 2px solid var(--blue); padding: 15px 40px; border-radius: 12px;">SAVE & CLOSE</div>
     </div>
 
     <script>
-        // --- 1. CONFIG & DATA ---
         let waitTime = parseInt(localStorage.getItem('waitTime')) || 70;
         let bonusTime = parseInt(localStorage.getItem('bonusTime')) || 10;
         let nextBeerTime = parseInt(localStorage.getItem('nextBeerTime')) || 0;
@@ -110,51 +104,39 @@
         let alarmFired = false;
         let wakeLock = null;
 
-        // --- 2. PERMISSIONS & WAKE LOCK ---
         if ("Notification" in window && Notification.permission !== "granted") {
             Notification.requestPermission();
         }
 
         const acquireWakeLock = async () => {
             if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock Active');
-                } catch (err) { console.error(`${err.name}, ${err.message}`); }
+                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {}
             }
         };
 
-        // --- 3. ALARM LOGIC ---
         function playAlarm() {
-            if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
-            
+            if (navigator.vibrate) navigator.vibrate([400, 100, 200, 100, 400]);
             try {
                 const context = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = context.createOscillator();
                 const gain = context.createGain();
-                osc.connect(gain);
-                gain.connect(context.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, context.currentTime); 
+                osc.connect(gain); gain.connect(context.destination);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, context.currentTime); 
                 gain.gain.setValueAtTime(0, context.currentTime);
                 gain.gain.linearRampToValueAtTime(0.5, context.currentTime + 0.1);
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 1.5);
+                osc.start(); gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 1.5);
                 osc.stop(context.currentTime + 1.6);
-            } catch(e) { console.log("Audio play failed"); }
-
+            } catch(e) {}
             if ("Notification" in window && Notification.permission === "granted") {
-                new Notification("PACER", { body: "Ready! You can buy your next beer.", tag: "pacer-alert" });
+                new Notification("PACER", { body: "Time's up!", tag: "pacer-alert" });
             }
         }
 
-        // --- 4. CORE FUNCTIONS ---
         function updateUI() {
             const now = Date.now();
             const diff = nextBeerTime - now;
             const timerEl = document.getElementById('timer');
             const startEl = document.getElementById('last-start');
-            
             startEl.innerText = history.length > 0 ? `Last Purchase: ${history[0].time}` : "No session active";
 
             if (diff <= 0) {
@@ -162,11 +144,7 @@
                 timerEl.style.color = "var(--green)";
                 document.getElementById('beer-btn').disabled = false;
                 document.getElementById('water-btn').disabled = true;
-                
-                if (!alarmFired && nextBeerTime !== 0) {
-                    playAlarm();
-                    alarmFired = true;
-                }
+                if (!alarmFired && nextBeerTime !== 0) { playAlarm(); alarmFired = true; }
             } else {
                 alarmFired = false;
                 const mins = Math.floor(diff / 60000);
@@ -176,12 +154,10 @@
                 document.getElementById('beer-btn').disabled = true;
                 document.getElementById('water-btn').disabled = waterUsed;
             }
-
             document.getElementById('beer-count').innerText = `${history.length} Beer${history.length === 1 ? '' : 's'}`;
             document.getElementById('history-list').innerHTML = history.slice(0, 5).map(e => `
                 <li><span>${e.time}</span> ${e.water ? '<span style="color:var(--blue)">💧 Water</span>' : ''}</li>
             `).join('');
-
             renderChart();
         }
 
@@ -189,48 +165,35 @@
             const chart = document.getElementById('chart-display');
             const targetLine = document.getElementById('chart-target-line');
             document.getElementById('target-stat').innerText = waitTime;
-
             if (datedPaces.length === 0) {
                 chart.innerHTML = '<p style="color:#444; width:100%; text-align:center;">No history yet</p>';
-                targetLine.style.display = 'none';
-                return;
+                targetLine.style.display = 'none'; return;
             }
-            
             targetLine.style.display = 'block';
             const allValues = datedPaces.map(d => d.pace);
             const maxVal = Math.max(...allValues, waitTime + 10, 80);
             const targetPos = (waitTime / maxVal) * 100;
             targetLine.style.bottom = `${targetPos}%`;
-
             const displayData = [...datedPaces].reverse().slice(-5);
             chart.innerHTML = displayData.map(d => {
                 const height = (d.pace / maxVal) * 100;
-                const shortDate = d.date.split(',')[0]; 
-                return `
-                    <div class="chart-bar-wrapper">
-                        <span class="bar-value">${d.pace}m</span>
-                        <div class="bar" style="height: ${height}%"></div>
-                        <span class="bar-label">${shortDate}</span>
-                    </div>
-                `;
+                return `<div class="chart-bar-wrapper"><span class="bar-value">${d.pace}m</span><div class="bar" style="height: ${height}%"></div><span class="bar-label">${d.date.split(',')[0]}</span></div>`;
             }).join('');
         }
 
         function buyBeer() {
-            acquireWakeLock(); // Try to keep screen on
+            acquireWakeLock();
             const now = Date.now();
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             history.unshift({ timestamp: now, time: timeStr, water: false });
             nextBeerTime = now + (waitTime * 60000);
-            waterUsed = false;
-            save(); updateUI();
+            waterUsed = false; save(); updateUI();
         }
 
         function drinkWater() {
             if (!waterUsed && nextBeerTime > Date.now()) {
                 nextBeerTime -= (bonusTime * 60000);
-                waterUsed = true;
-                if (history[0]) history[0].water = true;
+                waterUsed = true; if (history[0]) history[0].water = true;
                 save(); updateUI();
             }
         }
@@ -239,13 +202,9 @@
             if (history.length < 2) { alert("Session closed."); resetSession(); return; }
             const totalDurationMs = history[0].timestamp - history[history.length - 1].timestamp;
             const currentAvg = Math.round((totalDurationMs / (history.length - 1)) / 60000);
-            
-            const d = new Date(history[history.length - 1].timestamp);
-            const startDate = `${d.getDate()} ${d.toLocaleDateString([], { month: 'long' })}, ${d.getFullYear()}`;
-
-            datedPaces.unshift({ date: startDate, pace: currentAvg });
+            const d = new Date();
+            datedPaces.unshift({ date: `${d.getDate()} ${d.toLocaleDateString([], { month: 'short' })}`, pace: currentAvg });
             if (datedPaces.length > 5) datedPaces.pop();
-            
             alert(`FINISH\nAvg Pace: ${currentAvg}m\nGoal: ${waitTime}m`);
             resetSession();
         }
@@ -282,14 +241,12 @@
                     datedPaces = data.datedPaces || [];
                     waitTime = data.waitTime || 70;
                     bonusTime = data.bonusTime || 10;
-                    save(); alert("Imported!"); location.reload();
+                    save(); location.reload();
                 } catch(e) { alert("Invalid."); }
             }
         }
 
-        function clearCurrentLog() {
-            if (confirm("Reset current session?")) { resetSession(); toggleOverlay('settings-panel'); }
-        }
+        function clearCurrentLog() { if (confirm("Reset current session?")) { resetSession(); toggleOverlay('settings-panel'); } }
 
         function save() {
             localStorage.setItem('nextBeerTime', nextBeerTime);
@@ -301,7 +258,6 @@
         setInterval(updateUI, 1000);
         updateUI();
 
-        // Re-acquire wake lock if tab becomes visible again
         document.addEventListener('visibilitychange', () => {
             if (wakeLock !== null && document.visibilityState === 'visible') acquireWakeLock();
         });
