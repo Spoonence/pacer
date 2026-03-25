@@ -13,12 +13,13 @@
 
     <style>
         :root { --bg: #0a0a0a; --gold: #FFD700; --blue: #007AFF; --green: #00FF88; --red: #FF3B30; --card: #1a1a1a; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 40px 20px 20px 20px; box-sizing: border-box; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 40px 20px 20px 20px; box-sizing: border-box; overflow-x: hidden; }
         .header { width: 100%; max-width: 340px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         #last-start { font-size: 0.75rem; color: #555; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
         #timer { font-size: 5.5rem; font-weight: 800; margin: 10px 0 25px 0; font-variant-numeric: tabular-nums; }
         .btn-stack { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
-        .btn { width: 100%; padding: 22px; border: none; border-radius: 18px; font-size: 1.2rem; font-weight: bold; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .btn { width: 100%; padding: 22px; border: none; border-radius: 18px; font-size: 1.2rem; font-weight: bold; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.98); }
         #beer-btn { background: var(--gold); color: #000; }
         #beer-btn:disabled { background: #222; color: #555; }
         #water-btn { background: var(--blue); color: white; }
@@ -73,9 +74,7 @@
         <p style="color: #666; font-size: 0.8rem;">Target (Blue Line): <span id="target-stat">70</span>m</p>
         
         <div class="chart-wrapper">
-            <div id="chart-target-line" class="target-line">
-                <span class="target-label">Goal</span>
-            </div>
+            <div id="chart-target-line" class="target-line"><span class="target-label">Goal</span></div>
             <div class="chart-container" id="chart-display"></div>
         </div>
         
@@ -101,13 +100,55 @@
     </div>
 
     <script>
+        // --- 1. CONFIG & DATA ---
         let waitTime = parseInt(localStorage.getItem('waitTime')) || 70;
         let bonusTime = parseInt(localStorage.getItem('bonusTime')) || 10;
         let nextBeerTime = parseInt(localStorage.getItem('nextBeerTime')) || 0;
         let waterUsed = localStorage.getItem('waterUsed') === 'true';
         let history = JSON.parse(localStorage.getItem('beerHistory')) || [];
         let datedPaces = JSON.parse(localStorage.getItem('datedPaces')) || [];
+        let alarmFired = false;
+        let wakeLock = null;
 
+        // --- 2. PERMISSIONS & WAKE LOCK ---
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+
+        const acquireWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock Active');
+                } catch (err) { console.error(`${err.name}, ${err.message}`); }
+            }
+        };
+
+        // --- 3. ALARM LOGIC ---
+        function playAlarm() {
+            if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
+            
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = context.createOscillator();
+                const gain = context.createGain();
+                osc.connect(gain);
+                gain.connect(context.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, context.currentTime); 
+                gain.gain.setValueAtTime(0, context.currentTime);
+                gain.gain.linearRampToValueAtTime(0.5, context.currentTime + 0.1);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 1.5);
+                osc.stop(context.currentTime + 1.6);
+            } catch(e) { console.log("Audio play failed"); }
+
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("PACER", { body: "Ready! You can buy your next beer.", tag: "pacer-alert" });
+            }
+        }
+
+        // --- 4. CORE FUNCTIONS ---
         function updateUI() {
             const now = Date.now();
             const diff = nextBeerTime - now;
@@ -121,7 +162,13 @@
                 timerEl.style.color = "var(--green)";
                 document.getElementById('beer-btn').disabled = false;
                 document.getElementById('water-btn').disabled = true;
+                
+                if (!alarmFired && nextBeerTime !== 0) {
+                    playAlarm();
+                    alarmFired = true;
+                }
             } else {
+                alarmFired = false;
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
                 timerEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -129,6 +176,7 @@
                 document.getElementById('beer-btn').disabled = true;
                 document.getElementById('water-btn').disabled = waterUsed;
             }
+
             document.getElementById('beer-count').innerText = `${history.length} Beer${history.length === 1 ? '' : 's'}`;
             document.getElementById('history-list').innerHTML = history.slice(0, 5).map(e => `
                 <li><span>${e.time}</span> ${e.water ? '<span style="color:var(--blue)">💧 Water</span>' : ''}</li>
@@ -140,9 +188,7 @@
         function renderChart() {
             const chart = document.getElementById('chart-display');
             const targetLine = document.getElementById('chart-target-line');
-            const targetStat = document.getElementById('target-stat');
-            
-            targetStat.innerText = waitTime;
+            document.getElementById('target-stat').innerText = waitTime;
 
             if (datedPaces.length === 0) {
                 chart.innerHTML = '<p style="color:#444; width:100%; text-align:center;">No history yet</p>';
@@ -153,13 +199,10 @@
             targetLine.style.display = 'block';
             const allValues = datedPaces.map(d => d.pace);
             const maxVal = Math.max(...allValues, waitTime + 10, 80);
-            
-            // Position the target line
             const targetPos = (waitTime / maxVal) * 100;
             targetLine.style.bottom = `${targetPos}%`;
 
             const displayData = [...datedPaces].reverse().slice(-5);
-
             chart.innerHTML = displayData.map(d => {
                 const height = (d.pace / maxVal) * 100;
                 const shortDate = d.date.split(',')[0]; 
@@ -174,6 +217,7 @@
         }
 
         function buyBeer() {
+            acquireWakeLock(); // Try to keep screen on
             const now = Date.now();
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             history.unshift({ timestamp: now, time: timeStr, water: false });
@@ -195,19 +239,20 @@
             if (history.length < 2) { alert("Session closed."); resetSession(); return; }
             const totalDurationMs = history[0].timestamp - history[history.length - 1].timestamp;
             const currentAvg = Math.round((totalDurationMs / (history.length - 1)) / 60000);
+            
             const d = new Date(history[history.length - 1].timestamp);
-            const startDate = `${d.getDate()} ${d.toLocaleDateString([], { month: 'short' })}, ${d.getFullYear()}`;
+            const startDate = `${d.getDate()} ${d.toLocaleDateString([], { month: 'long' })}, ${d.getFullYear()}`;
 
             datedPaces.unshift({ date: startDate, pace: currentAvg });
             if (datedPaces.length > 5) datedPaces.pop();
-            localStorage.setItem('datedPaces', JSON.stringify(datedPaces));
-
+            
             alert(`FINISH\nAvg Pace: ${currentAvg}m\nGoal: ${waitTime}m`);
             resetSession();
         }
 
         function resetSession() {
-            history = []; nextBeerTime = 0; waterUsed = false;
+            history = []; nextBeerTime = 0; waterUsed = false; alarmFired = false;
+            if (wakeLock) { wakeLock.release(); wakeLock = null; }
             save(); updateUI();
         }
 
@@ -255,6 +300,11 @@
 
         setInterval(updateUI, 1000);
         updateUI();
+
+        // Re-acquire wake lock if tab becomes visible again
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') acquireWakeLock();
+        });
     </script>
 </body>
 </html>
