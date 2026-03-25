@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Pacer">
 
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBhMGEwYSIvPgogIDxwYXRoIGQ9Ik01MCw0MCBMNjAsMTQwIEw4MCwxNDAgTDkwLDQwIFoiIGZpbGw9IiNGRkQ3MDAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPgogIDxwYXRoIGQ9Ik00NSwzMCBMOTUsMzAgQzEwMCw0MCA5NSw1MCA4MCw1MCBDNzUsNTAgNzAsNTUgNzAsNjAgQzcwLDY1IDY1LDYwIDYwLDYwIEM1NSw2MCA1MCw2NSA1MCw3MCBDNTAsNzUgNDUsNzAgNDAsNzAgQzM1LDcwIDMwLDc1IDMwLDgwIEMzMCw4NSAyNSw4MCAyMCw4MCBDMTUsODAgMTAsODUgMTAsOTAgQzEwLDk1IDUsOTAgMCw5MCBMMCwzMCBaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj4KICA8cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzBhMGEwYSIvPgogIDxwYXRoIGQ9Ik01MCw0MCBMNjAsMTQwIEw4MCwxNDAgTDkwLDQwIFoiIGZpbGw9IiNGRkQ3MDAiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPgogIDxwYXRoIGQ9Ik00NSwzMCBMOTUsMzAgQzEwMCw0MCA5NSw1MCA4MCw1MCBDNzUsNTAgNzAsNTUgNzAsNjAgQzcwLDY1IDY1LDYwIDYwLDYwIEM1NSw2MCA1MCw2NSA1MCw3MCBDNTAsNzUgNDUsNzAgNDAsNzAgQzM1LDcwIDMwLDt5IDMwLDgwIEMzMCw4NSAyNSw4MCAyMCw4MCBDMTUsODAgMTAsODUgMTAsOTAgQzEwLDk1IDUsOTAgMCw5MCBMMCwzMCBaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4=">
 
     <style>
         :root { --bg: #0a0a0a; --gold: #FFD700; --blue: #007AFF; --green: #00FF88; --red: #FF3B30; --card: #1a1a1a; }
@@ -23,20 +23,27 @@
         #beer-btn:disabled { background: #222; color: #555; }
         #water-btn { background: var(--blue); color: white; }
         #water-btn:disabled { background: #1a1a1a; color: #444; opacity: 0.5; }
+        
         .log-container { width: 100%; max-width: 340px; background: var(--card); border-radius: 18px; padding: 15px; margin-top: 25px; }
         .log-header { font-size: 0.8rem; color: #666; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; }
         ul { list-style: none; padding: 0; margin: 0; }
         li { padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; font-size: 0.95rem; }
         
+        /* Chart Elements */
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
+        .chart-wrapper { position: relative; width: 100%; max-width: 320px; height: 220px; margin-top: 30px; }
+        .chart-container { display: flex; align-items: flex-end; justify-content: space-between; width: 100%; height: 200px; border-bottom: 2px solid #333; position: relative; z-index: 2; }
+        .target-line { position: absolute; left: 0; right: 0; border-top: 2px dashed rgba(0, 122, 255, 0.6); z-index: 1; pointer-events: none; }
+        .target-label { position: absolute; right: -5px; color: var(--blue); font-size: 0.6rem; font-weight: bold; transform: translateY(-100%); text-transform: uppercase; }
+        
+        .chart-bar-wrapper { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; position: relative; z-index: 3; }
+        .bar-value { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--gold); }
+        .bar { width: 30px; background: linear-gradient(to top, var(--gold), #fff59d); border-radius: 4px 4px 0 0; transition: height 0.5s ease-out; }
+        .bar-label { font-size: 0.65rem; color: #666; margin-top: 10px; text-align: center; width: 60px; transform: rotate(-45deg); height: 40px; }
+
         input { background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 70px; text-align: center; font-size: 1.3rem; margin: 10px 0; }
         .secondary-btn { background: #333; color: white; padding: 10px 20px; border-radius: 10px; margin: 5px; font-size: 0.8rem; border: none; font-weight: bold; }
         .danger-link { color: var(--red); font-size: 0.8rem; margin-top: 25px; cursor: pointer; text-decoration: underline; opacity: 0.7; }
-        
-        table { width: 100%; max-width: 280px; border-collapse: collapse; margin-top: 20px; }
-        th { color: #666; font-size: 0.7rem; text-transform: uppercase; text-align: left; padding-bottom: 10px; }
-        td { padding: 12px 0; border-bottom: 1px solid #222; font-size: 1.1rem; }
-        .baseline-val { font-weight: bold; color: var(--gold); }
     </style>
 </head>
 <body>
@@ -62,16 +69,17 @@
     </div>
 
     <div id="history-panel" class="overlay">
-        <h2 style="margin-bottom: 10px;">Baseline History</h2>
-        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Last 5 Sessions (mins/beer)</p>
-        <table>
-            <thead>
-                <tr><th>Session</th><th>Avg Pace</th></tr>
-            </thead>
-            <tbody id="baseline-table-body">
-                </tbody>
-        </table>
-        <div onclick="toggleOverlay('history-panel')" style="margin-top:40px; color:var(--gold); font-weight:bold; cursor:pointer; font-size: 1.1rem; border: 1px solid var(--gold); padding: 12px 30px; border-radius: 12px;">CLOSE</div>
+        <h2 style="margin-bottom: 5px;">Pacing Trends</h2>
+        <p style="color: #666; font-size: 0.8rem;">Target (Blue Line): <span id="target-stat">70</span>m</p>
+        
+        <div class="chart-wrapper">
+            <div id="chart-target-line" class="target-line">
+                <span class="target-label">Goal</span>
+            </div>
+            <div class="chart-container" id="chart-display"></div>
+        </div>
+        
+        <div onclick="toggleOverlay('history-panel')" style="margin-top:80px; color:var(--gold); font-weight:bold; cursor:pointer; font-size: 1.1rem; border: 1px solid var(--gold); padding: 12px 30px; border-radius: 12px;">CLOSE</div>
     </div>
 
     <div id="settings-panel" class="overlay">
@@ -82,7 +90,6 @@
             <p style="color:#888; margin: 20px 0 5px 0;">Water Bonus (mins)</p>
             <input type="number" id="set-bonus" value="10">
         </div>
-        
         <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; text-align:center; width: 100%; max-width: 300px;">
             <p style="color:#666; font-size: 0.7rem; margin-bottom: 10px; letter-spacing: 1px;">DATA MANAGEMENT</p>
             <button class="secondary-btn" onclick="exportData()">EXPORT</button>
@@ -90,7 +97,6 @@
             <br>
             <div class="danger-link" onclick="clearCurrentLog()">Wipe Current Session Log</div>
         </div>
-
         <div onclick="saveSettings()" style="margin-top:40px; color:var(--blue); font-weight:bold; cursor:pointer; font-size: 1.3rem; border: 2px solid var(--blue); padding: 15px 40px; border-radius: 12px;">SAVE & CLOSE</div>
     </div>
 
@@ -100,7 +106,155 @@
         let nextBeerTime = parseInt(localStorage.getItem('nextBeerTime')) || 0;
         let waterUsed = localStorage.getItem('waterUsed') === 'true';
         let history = JSON.parse(localStorage.getItem('beerHistory')) || [];
-        let lastFivePaces = JSON.parse(localStorage.getItem('lastFivePaces')) || [];
+        let datedPaces = JSON.parse(localStorage.getItem('datedPaces')) || [];
 
         function updateUI() {
-            const
+            const now = Date.now();
+            const diff = nextBeerTime - now;
+            const timerEl = document.getElementById('timer');
+            const startEl = document.getElementById('last-start');
+            
+            startEl.innerText = history.length > 0 ? `Last Purchase: ${history[0].time}` : "No session active";
+
+            if (diff <= 0) {
+                timerEl.innerText = "READY";
+                timerEl.style.color = "var(--green)";
+                document.getElementById('beer-btn').disabled = false;
+                document.getElementById('water-btn').disabled = true;
+            } else {
+                const mins = Math.floor(diff / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                timerEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                timerEl.style.color = "var(--red)";
+                document.getElementById('beer-btn').disabled = true;
+                document.getElementById('water-btn').disabled = waterUsed;
+            }
+            document.getElementById('beer-count').innerText = `${history.length} Beer${history.length === 1 ? '' : 's'}`;
+            document.getElementById('history-list').innerHTML = history.slice(0, 5).map(e => `
+                <li><span>${e.time}</span> ${e.water ? '<span style="color:var(--blue)">💧 Water</span>' : ''}</li>
+            `).join('');
+
+            renderChart();
+        }
+
+        function renderChart() {
+            const chart = document.getElementById('chart-display');
+            const targetLine = document.getElementById('chart-target-line');
+            const targetStat = document.getElementById('target-stat');
+            
+            targetStat.innerText = waitTime;
+
+            if (datedPaces.length === 0) {
+                chart.innerHTML = '<p style="color:#444; width:100%; text-align:center;">No history yet</p>';
+                targetLine.style.display = 'none';
+                return;
+            }
+            
+            targetLine.style.display = 'block';
+            const allValues = datedPaces.map(d => d.pace);
+            const maxVal = Math.max(...allValues, waitTime + 10, 80);
+            
+            // Position the target line
+            const targetPos = (waitTime / maxVal) * 100;
+            targetLine.style.bottom = `${targetPos}%`;
+
+            const displayData = [...datedPaces].reverse().slice(-5);
+
+            chart.innerHTML = displayData.map(d => {
+                const height = (d.pace / maxVal) * 100;
+                const shortDate = d.date.split(',')[0]; 
+                return `
+                    <div class="chart-bar-wrapper">
+                        <span class="bar-value">${d.pace}m</span>
+                        <div class="bar" style="height: ${height}%"></div>
+                        <span class="bar-label">${shortDate}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function buyBeer() {
+            const now = Date.now();
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            history.unshift({ timestamp: now, time: timeStr, water: false });
+            nextBeerTime = now + (waitTime * 60000);
+            waterUsed = false;
+            save(); updateUI();
+        }
+
+        function drinkWater() {
+            if (!waterUsed && nextBeerTime > Date.now()) {
+                nextBeerTime -= (bonusTime * 60000);
+                waterUsed = true;
+                if (history[0]) history[0].water = true;
+                save(); updateUI();
+            }
+        }
+
+        function finishNight() {
+            if (history.length < 2) { alert("Session closed."); resetSession(); return; }
+            const totalDurationMs = history[0].timestamp - history[history.length - 1].timestamp;
+            const currentAvg = Math.round((totalDurationMs / (history.length - 1)) / 60000);
+            const d = new Date(history[history.length - 1].timestamp);
+            const startDate = `${d.getDate()} ${d.toLocaleDateString([], { month: 'short' })}, ${d.getFullYear()}`;
+
+            datedPaces.unshift({ date: startDate, pace: currentAvg });
+            if (datedPaces.length > 5) datedPaces.pop();
+            localStorage.setItem('datedPaces', JSON.stringify(datedPaces));
+
+            alert(`FINISH\nAvg Pace: ${currentAvg}m\nGoal: ${waitTime}m`);
+            resetSession();
+        }
+
+        function resetSession() {
+            history = []; nextBeerTime = 0; waterUsed = false;
+            save(); updateUI();
+        }
+
+        function toggleOverlay(id) {
+            const el = document.getElementById(id);
+            el.style.display = (el.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function saveSettings() {
+            waitTime = parseInt(document.getElementById('set-wait').value);
+            bonusTime = parseInt(document.getElementById('set-bonus').value);
+            localStorage.setItem('waitTime', waitTime);
+            localStorage.setItem('bonusTime', bonusTime);
+            toggleOverlay('settings-panel');
+        }
+
+        function exportData() {
+            const b64 = btoa(JSON.stringify({ waitTime, bonusTime, datedPaces }));
+            navigator.clipboard.writeText(b64).then(() => alert("Data copied!"));
+        }
+
+        function importData() {
+            const code = prompt("Paste code:");
+            if (code) {
+                try {
+                    const data = JSON.parse(atob(code));
+                    datedPaces = data.datedPaces || [];
+                    waitTime = data.waitTime || 70;
+                    bonusTime = data.bonusTime || 10;
+                    save(); alert("Imported!"); location.reload();
+                } catch(e) { alert("Invalid."); }
+            }
+        }
+
+        function clearCurrentLog() {
+            if (confirm("Reset current session?")) { resetSession(); toggleOverlay('settings-panel'); }
+        }
+
+        function save() {
+            localStorage.setItem('nextBeerTime', nextBeerTime);
+            localStorage.setItem('waterUsed', waterUsed);
+            localStorage.setItem('beerHistory', JSON.stringify(history));
+            localStorage.setItem('datedPaces', JSON.stringify(datedPaces));
+        }
+
+        setInterval(updateUI, 1000);
+        updateUI();
+    </script>
+</body>
+</html>
