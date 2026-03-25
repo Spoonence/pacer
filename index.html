@@ -27,8 +27,11 @@
         .log-header { font-size: 0.8rem; color: #666; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; }
         ul { list-style: none; padding: 0; margin: 0; }
         li { padding: 10px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; font-size: 0.95rem; }
-        #settings-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.96); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        
+        #settings-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
         input { background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: 70px; text-align: center; font-size: 1.3rem; margin: 10px 0; }
+        .secondary-btn { background: #333; color: white; padding: 10px 20px; border-radius: 10px; margin: 5px; font-size: 0.8rem; border: none; font-weight: bold; }
+        .danger-link { color: var(--red); font-size: 0.8rem; margin-top: 25px; cursor: pointer; text-decoration: underline; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -53,14 +56,23 @@
     </div>
 
     <div id="settings-panel">
-        <h2 style="margin-bottom: 30px;">Settings</h2>
+        <h2 style="margin-bottom: 20px;">Settings</h2>
         <div style="text-align: center;">
             <p style="color:#888; margin: 5px 0;">Wait Time (mins)</p>
             <input type="number" id="set-wait" value="70">
             <p style="color:#888; margin: 20px 0 5px 0;">Water Bonus (mins)</p>
             <input type="number" id="set-bonus" value="10">
         </div>
-        <div onclick="toggleSettings()" style="margin-top:40px; color:var(--blue); font-weight:bold; cursor:pointer; font-size: 1.3rem; border: 2px solid var(--blue); padding: 15px 40px; border-radius: 12px;">SAVE</div>
+        
+        <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; text-align:center; width: 100%; max-width: 300px;">
+            <p style="color:#666; font-size: 0.7rem; margin-bottom: 10px; letter-spacing: 1px;">DATA MANAGEMENT</p>
+            <button class="secondary-btn" onclick="exportData()">EXPORT</button>
+            <button class="secondary-btn" onclick="importData()">IMPORT</button>
+            <br>
+            <div class="danger-link" onclick="clearCurrentLog()">Wipe Current Session Log</div>
+        </div>
+
+        <div onclick="toggleSettings()" style="margin-top:40px; color:var(--blue); font-weight:bold; cursor:pointer; font-size: 1.3rem; border: 2px solid var(--blue); padding: 15px 40px; border-radius: 12px;">SAVE & CLOSE</div>
     </div>
 
     <script>
@@ -126,7 +138,6 @@
                 resetSession();
                 return;
             }
-            
             const totalDurationMs = history[0].timestamp - history[history.length - 1].timestamp;
             const currentAvg = Math.round((totalDurationMs / (history.length - 1)) / 60000);
             const prevSessionAvg = lastFivePaces.length > 0 ? lastFivePaces[0] : null;
@@ -156,6 +167,13 @@
             save(); updateUI();
         }
 
+        function clearCurrentLog() {
+            if (confirm("This will delete tonight's list and reset the timer. Your 5-night average will stay safe. Proceed?")) {
+                resetSession();
+                toggleSettings();
+            }
+        }
+
         function toggleSettings() {
             const panel = document.getElementById('settings-panel');
             if (panel.style.display === 'flex') {
@@ -167,10 +185,34 @@
             } else { panel.style.display = 'flex'; }
         }
 
+        function exportData() {
+            const data = { waitTime, bonusTime, lastFivePaces };
+            const b64 = btoa(JSON.stringify(data));
+            navigator.clipboard.writeText(b64).then(() => {
+                alert("Settings and 5-Night Baseline copied to clipboard!");
+            });
+        }
+
+        function importData() {
+            const code = prompt("Paste your export code here:");
+            if (code) {
+                try {
+                    const data = JSON.parse(atob(code));
+                    lastFivePaces = data.lastFivePaces || [];
+                    waitTime = data.waitTime || 70;
+                    bonusTime = data.bonusTime || 10;
+                    save();
+                    alert("Data imported successfully!");
+                    location.reload();
+                } catch(e) { alert("Invalid code."); }
+            }
+        }
+
         function save() {
             localStorage.setItem('nextBeerTime', nextBeerTime);
             localStorage.setItem('waterUsed', waterUsed);
             localStorage.setItem('beerHistory', JSON.stringify(history));
+            localStorage.setItem('lastFivePaces', JSON.stringify(lastFivePaces));
         }
 
         setInterval(updateUI, 1000);
